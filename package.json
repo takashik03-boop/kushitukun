@@ -1,0 +1,9 @@
+{
+  "name": "kussharo-sauna-club",
+  "version": "1.0.0",
+  "description": "Availability calendar for Kussharo Sauna Club",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

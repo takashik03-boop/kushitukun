@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kussharo Sauna Club - Availability</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    header h1 { font-size: 26px; margin-bottom: 4px; }
+    header p { opacity: 0.85; font-size: 14px; }
+
+    .container {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    /* Property Info */
+    .property-info {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .info-item {
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .info-item .label { font-size: 11px; color: #888; }
+    .info-item .value { font-size: 15px; font-weight: bold; }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .legend-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+
+    .legend-dot.available { background: #e8f5e9; border: 1px solid #a5d6a7; }
+    .legend-dot.airbnb { background: #ffcdd2; border: 1px solid #ef9a9a; }
+    .legend-dot.bookingcom { background: #bbdefb; border: 1px solid #90caf9; }
+    .legend-dot.direct { background: #e1bee7; border: 1px solid #ce93d8; }
+    .legend-dot.blocked { background: #e0e0e0; border: 1px solid #bdbdbd; }
+    .legend-dot.today-dot { background: white; border: 2px solid #3498db; }
+
+    /* Calendar Navigation */
+    .calendar-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .calendar-nav button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .calendar-nav button:hover { background: #2980b9; }
+    .calendar-nav h2 { font-size: 22px; }
+
+    /* Calendar */
+    .calendar {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .calendar-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: #34495e;
+      color: white;
+    }
+
+    .calendar-header div {
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .calendar-body {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .day {
+      min-height: 64px;
+      padding: 6px;
+      border: 1px solid #eee;
+      position: relative;
+    }
+
+    .day.empty { background: #fafafa; }
+
+    .day .day-number {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .day.today { border: 2px solid #3498db; }
+
+    .day.past { opacity: 0.4; }
+
+    .day.available { background: #e8f5e9; }
+
+    .day.reserved-airbnb {
+      background: #ffcdd2;
+    }
+
+    .day.reserved-bookingcom {
+      background: #bbdefb;
+    }
+
+    .day.reserved-direct {
+      background: #e1bee7;
+    }
+
+    .day.blocked {
+      background: #e0e0e0;
+    }
+
+    .day .tag {
+      font-size: 9px;
+      font-weight: bold;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: white;
+      display: inline-block;
+    }
+
+    .tag.airbnb { background: #e53935; }
+    .tag.bookingcom { background: #1565c0; }
+    .tag.direct { background: #8e24aa; }
+
+    .day .status-text {
+      font-size: 10px;
+      margin-top: 2px;
+      color: #555;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 16px;
+      color: #888;
+    }
+
+    /* Refresh button */
+    .refresh-btn {
+      display: block;
+      margin: 0 auto 24px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .refresh-btn:hover { background: #219a52; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Kussharo Sauna Club</h1>
+    <p>Near Lake Kussharo, Hokkaido - Availability Calendar</p>
+  </header>
+
+  <div class="container">
+
+    <div class="property-info">
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Rooms</div>
+          <div class="value">3 rooms</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Guests</div>
+          <div class="value">Max 9 (1 group only)</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Price</div>
+          <div class="value">¥100,000 / night</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Extra Guest</div>
+          <div class="value">+¥10,000 (over 6)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot available"></div> Available</div>
+      <div class="legend-item"><div class="legend-dot airbnb"></div> Airbnb</div>
+      <div class="legend-item"><div class="legend-dot bookingcom"></div> Booking.com</div>
+      <div class="legend-item"><div class="legend-dot direct"></div> Direct</div>
+      <div class="legend-item"><div class="legend-dot blocked"></div> Blocked</div>
+      <div class="legend-item"><div class="legend-dot today-dot"></div> Today</div>
+    </div>
+
+    <div class="calendar-nav">
+      <button onclick="changeMonth(-1)">&larr; Prev</button>
+      <h2 id="monthTitle"></h2>
+      <button onclick="changeMonth(1)">Next &rarr;</button>
+    </div>
+
+    <div class="calendar">
+      <div class="calendar-header">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
+        <div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+      <div class="calendar-body" id="calendarBody">
+        <div class="loading">Loading bookings from Airbnb & Booking.com...</div>
+      </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadBookings()">Refresh Bookings</button>
+  </div>
+
+  <script>
+    let currentYear, currentMonth;
+    let bookings = [];
+
+    const MONTH_NAMES = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    function init() {
+      const now = new Date();
+      currentYear = now.getFullYear();
+      currentMonth = now.getMonth();
+      loadBookings();
+    }
+
+    // Fetch bookings from server
+    function loadBookings() {
+      document.getElementById("calendarBody").innerHTML =
+        '<div class="loading">Loading bookings from Airbnb & Booking.com...</div>';
+
+      fetch("/api/bookings")
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          bookings = data;
+          renderCalendar();
+        })
+        .catch(function (err) {
+          document.getElementById("calendarBody").innerHTML =
+            '<div class="loading">Error loading bookings. Please try again.</div>';
+          console.error(err);
+        });
+    }
+
+    // Find booking for a specific date
+    function findBooking(dateStr) {
+      var date = new Date(dateStr);
+      for (var i = 0; i < bookings.length; i++) {
+        var checkIn = new Date(bookings[i].checkIn);
+        var checkOut = new Date(bookings[i].checkOut);
+        if (date >= checkIn && date < checkOut) {
+          return bookings[i];
+        }
+      }
+      return null;
+    }
+
+    // Render the calendar
+    function renderCalendar() {
+      document.getElementById("monthTitle").textContent =
+        MONTH_NAMES[currentMonth] + " " + currentYear;
+
+      var body = document.getElementById("calendarBody");
+      body.innerHTML = "";
+
+      var firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      var today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Empty cells
+      for (var i = 0; i < firstDay; i++) {
+        var empty = document.createElement("div");
+        empty.className = "day empty";
+        body.appendChild(empty);
+      }
+
+      // Day cells
+      for (var d = 1; d <= daysInMonth; d++) {
+        var cell = document.createElement("div");
+        cell.className = "day";
+
+        var dateStr =
+          currentYear +
+          "-" +
+          String(currentMonth + 1).padStart(2, "0") +
+          "-" +
+          String(d).padStart(2, "0");
+
+        var cellDate = new Date(dateStr);
+        cellDate.setHours(0, 0, 0, 0);
+
+        var booking = findBooking(dateStr);
+
+        // Today
+        if (
+          today.getFullYear() === currentYear &&
+          today.getMonth() === currentMonth &&
+          today.getDate() === d
+        ) {
+          cell.classList.add("today");
+        }
+
+        // Past
+        if (cellDate < today) {
+          cell.classList.add("past");
+        }
+
+        // Day number
+        var num = document.createElement("div");
+        num.className = "day-number";
+        num.textContent = d;
+        cell.appendChild(num);
+
+        // Booking status
+        if (booking) {
+          if (booking.type === "reserved") {
+            var otaClass = "airbnb";
+            var otaLabel = "Airbnb";
+            if (booking.ota === "booking.com") { otaClass = "bookingcom"; otaLabel = "Booking"; }
+            else if (booking.ota === "direct") { otaClass = "direct"; otaLabel = "Direct"; }
+
+            cell.classList.add("reserved-" + otaClass);
+
+            var tag = document.createElement("span");
+            tag.className = "tag " + otaClass;
+            tag.textContent = otaLabel;
+            cell.appendChild(tag);
+
+            if (booking.guestName) {
+              var name = document.createElement("div");
+              name.className = "status-text";
+              name.textContent = booking.guestName;
+              cell.appendChild(name);
+            }
+          } else {
+            cell.classList.add("blocked");
+
+            var status2 = document.createElement("div");
+            status2.className = "status-text";
+            status2.textContent = "Blocked";
+            cell.appendChild(status2);
+          }
+        } else if (cellDate >= today) {
+          cell.classList.add("available");
+        }
+
+        body.appendChild(cell);
+      }
+    }
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      renderCalendar();
+    }
+
+    init();
+  </script>
+</body>
+</html>
