@@ -367,12 +367,6 @@
             tag.textContent = otaLabel;
             cell.appendChild(tag);
 
-            if (booking.guestName) {
-              var name = document.createElement("div");
-              name.className = "status-text";
-              name.textContent = booking.guestName;
-              cell.appendChild(name);
-            }
           } else {
             cell.classList.add("blocked");
 
