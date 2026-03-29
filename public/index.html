@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>屈斜路湖サウナ倶楽部 - Availability</title>
+  <title>Availability Calendar</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -23,36 +23,43 @@
     header h1 { font-size: 26px; margin-bottom: 4px; }
     header p { opacity: 0.85; font-size: 14px; }
 
+    /* Tabs */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin: 0;
+      background: #2c3e50;
+    }
+
+    .tab-btn {
+      padding: 14px 32px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: rgba(255,255,255,0.9);
+    }
+
+    .tab-btn.active {
+      color: white;
+      border-bottom-color: #3498db;
+      background: rgba(255,255,255,0.1);
+    }
+
     .container {
       max-width: 900px;
       margin: 24px auto;
       padding: 0 16px;
       overflow-x: hidden;
     }
-
-    /* Property Info */
-    .property-info {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-    }
-
-    .info-item {
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 8px;
-    }
-
-    .info-item .label { font-size: 11px; color: #888; }
-    .info-item .value { font-size: 15px; font-weight: bold; }
 
     /* Legend */
     .legend {
@@ -81,6 +88,7 @@
     .legend-dot.bookingcom { background: #bbdefb; border: 1px solid #90caf9; }
     .legend-dot.direct { background: #e1bee7; border: 1px solid #ce93d8; }
     .legend-dot.blocked { background: #e0e0e0; border: 1px solid #bdbdbd; }
+    .legend-dot.reserved { background: #ffcdd2; border: 1px solid #ef9a9a; }
     .legend-dot.today-dot { background: white; border: 2px solid #3498db; }
 
     /* Calendar Navigation */
@@ -137,6 +145,7 @@
       padding: 6px;
       border: 1px solid #eee;
       position: relative;
+      overflow: hidden;
     }
 
     .day.empty { background: #fafafa; }
@@ -153,21 +162,11 @@
 
     .day.available { background: #e8f5e9; }
 
-    .day.reserved-airbnb {
-      background: #ffcdd2;
-    }
-
-    .day.reserved-bookingcom {
-      background: #bbdefb;
-    }
-
-    .day.reserved-direct {
-      background: #e1bee7;
-    }
-
-    .day.blocked {
-      background: #e0e0e0;
-    }
+    .day.reserved-airbnb { background: #ffcdd2; }
+    .day.reserved-bookingcom { background: #bbdefb; }
+    .day.reserved-direct { background: #e1bee7; }
+    .day.reserved { background: #ffcdd2; }
+    .day.blocked { background: #e0e0e0; }
 
     .day .tag {
       font-size: 9px;
@@ -181,13 +180,10 @@
       max-width: 100%;
     }
 
-    .day {
-      overflow: hidden;
-    }
-
     .tag.airbnb { background: #e53935; }
     .tag.bookingcom { background: #1565c0; }
     .tag.direct { background: #8e24aa; }
+    .tag.reserved { background: #e53935; }
 
     .day .status-text {
       font-size: 10px;
@@ -222,20 +218,18 @@
 <body>
 
   <header>
-    <h1>屈斜路湖サウナ倶楽部</h1>
-    <p>Near Lake Kussharo, Hokkaido - Availability Calendar</p>
+    <h1 id="headerTitle">屈斜路湖サウナ倶楽部</h1>
+    <p id="headerSub">Near Lake Kussharo, Hokkaido - Availability Calendar</p>
   </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('sauna')">屈斜路湖サウナ倶楽部</button>
+    <button class="tab-btn" onclick="switchTab('tapkop')">TAPKOP</button>
+  </div>
 
   <div class="container">
 
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot available"></div> Available</div>
-      <div class="legend-item"><div class="legend-dot airbnb"></div> Airbnb</div>
-      <div class="legend-item"><div class="legend-dot bookingcom"></div> Booking.com</div>
-      <div class="legend-item"><div class="legend-dot direct"></div> Direct</div>
-      <div class="legend-item"><div class="legend-dot blocked"></div> Blocked</div>
-      <div class="legend-item"><div class="legend-dot today-dot"></div> Today</div>
-    </div>
+    <div class="legend" id="legend"></div>
 
     <div class="calendar-nav">
       <button onclick="changeMonth(-1)">&larr; Prev</button>
@@ -249,7 +243,7 @@
         <div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
       <div class="calendar-body" id="calendarBody">
-        <div class="loading">Loading bookings from Airbnb & Booking.com...</div>
+        <div class="loading">Loading...</div>
       </div>
     </div>
 
@@ -257,27 +251,78 @@
   </div>
 
   <script>
-    let currentYear, currentMonth;
-    let bookings = [];
+    var currentYear, currentMonth;
+    var bookings = [];
+    var currentTab = "sauna";
 
-    const MONTH_NAMES = [
+    var MONTH_NAMES = [
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ];
 
+    var TABS = {
+      sauna: {
+        title: "屈斜路湖サウナ倶楽部",
+        subtitle: "Near Lake Kussharo, Hokkaido - Availability Calendar",
+        api: "/api/bookings",
+        legend: [
+          { cls: "available", label: "Available" },
+          { cls: "airbnb", label: "Airbnb" },
+          { cls: "bookingcom", label: "Booking.com" },
+          { cls: "direct", label: "Direct" },
+          { cls: "blocked", label: "Blocked" },
+          { cls: "today-dot", label: "Today" }
+        ]
+      },
+      tapkop: {
+        title: "TAPKOP",
+        subtitle: "Availability Calendar",
+        api: "/api/tapkop",
+        legend: [
+          { cls: "available", label: "Available" },
+          { cls: "reserved", label: "Reserved" },
+          { cls: "today-dot", label: "Today" }
+        ]
+      }
+    };
+
     function init() {
-      const now = new Date();
+      var now = new Date();
       currentYear = now.getFullYear();
       currentMonth = now.getMonth();
+      switchTab("sauna");
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      var config = TABS[tab];
+
+      document.getElementById("headerTitle").textContent = config.title;
+      document.getElementById("headerSub").textContent = config.subtitle;
+
+      var btns = document.querySelectorAll(".tab-btn");
+      btns.forEach(function (btn) { btn.classList.remove("active"); });
+      if (tab === "sauna") btns[0].classList.add("active");
+      else btns[1].classList.add("active");
+
+      var legendEl = document.getElementById("legend");
+      legendEl.innerHTML = "";
+      config.legend.forEach(function (item) {
+        var div = document.createElement("div");
+        div.className = "legend-item";
+        div.innerHTML = '<div class="legend-dot ' + item.cls + '"></div> ' + item.label;
+        legendEl.appendChild(div);
+      });
+
       loadBookings();
     }
 
-    // Fetch bookings from server
     function loadBookings() {
+      var config = TABS[currentTab];
       document.getElementById("calendarBody").innerHTML =
-        '<div class="loading">Loading bookings from Airbnb & Booking.com...</div>';
+        '<div class="loading">Loading...</div>';
 
-      fetch("/api/bookings")
+      fetch(config.api)
         .then(function (res) { return res.json(); })
         .then(function (data) {
           bookings = data;
@@ -290,20 +335,20 @@
         });
     }
 
-    // Find booking for a specific date
     function findBooking(dateStr) {
       var date = new Date(dateStr);
       for (var i = 0; i < bookings.length; i++) {
         var checkIn = new Date(bookings[i].checkIn);
         var checkOut = new Date(bookings[i].checkOut);
-        if (date >= checkIn && date < checkOut) {
-          return bookings[i];
+        if (currentTab === "tapkop") {
+          if (bookings[i].checkIn === dateStr) return bookings[i];
+        } else {
+          if (date >= checkIn && date < checkOut) return bookings[i];
         }
       }
       return null;
     }
 
-    // Render the calendar
     function renderCalendar() {
       document.getElementById("monthTitle").textContent =
         MONTH_NAMES[currentMonth] + " " + currentYear;
@@ -316,14 +361,12 @@
       var today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Empty cells
       for (var i = 0; i < firstDay; i++) {
         var empty = document.createElement("div");
         empty.className = "day empty";
         body.appendChild(empty);
       }
 
-      // Day cells
       for (var d = 1; d <= daysInMonth; d++) {
         var cell = document.createElement("div");
         cell.className = "day";
@@ -340,7 +383,6 @@
 
         var booking = findBooking(dateStr);
 
-        // Today
         if (
           today.getFullYear() === currentYear &&
           today.getMonth() === currentMonth &&
@@ -349,20 +391,23 @@
           cell.classList.add("today");
         }
 
-        // Past
         if (cellDate < today) {
           cell.classList.add("past");
         }
 
-        // Day number
         var num = document.createElement("div");
         num.className = "day-number";
         num.textContent = d;
         cell.appendChild(num);
 
-        // Booking status
         if (booking) {
-          if (booking.type === "reserved") {
+          if (currentTab === "tapkop") {
+            cell.classList.add("reserved");
+            var tag = document.createElement("span");
+            tag.className = "tag reserved";
+            tag.textContent = "Reserved";
+            cell.appendChild(tag);
+          } else if (booking.type === "reserved") {
             var otaClass = "airbnb";
             var otaLabel = "Airbnb";
             if (booking.ota === "booking.com") { otaClass = "bookingcom"; otaLabel = "Booking"; }
@@ -370,11 +415,10 @@
 
             cell.classList.add("reserved-" + otaClass);
 
-            var tag = document.createElement("span");
-            tag.className = "tag " + otaClass;
-            tag.textContent = otaLabel;
-            cell.appendChild(tag);
-
+            var tag2 = document.createElement("span");
+            tag2.className = "tag " + otaClass;
+            tag2.textContent = otaLabel;
+            cell.appendChild(tag2);
           } else {
             cell.classList.add("blocked");
 
@@ -395,7 +439,11 @@
       currentMonth += delta;
       if (currentMonth < 0) { currentMonth = 11; currentYear--; }
       else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-      renderCalendar();
+      if (currentTab === "tapkop") {
+        loadBookings();
+      } else {
+        renderCalendar();
+      }
     }
 
     init();
