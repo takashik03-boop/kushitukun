@@ -237,7 +237,6 @@
 
     <div class="calendar-nav">
       <button onclick="changeMonth(-1)">&larr; Prev</button>
-      <button onclick="goToday()" style="background:#27ae60;font-size:13px;padding:8px 14px;">Today</button>
       <h2 id="monthTitle"></h2>
       <button onclick="changeMonth(1)">Next &rarr;</button>
     </div>
@@ -252,7 +251,10 @@
       </div>
     </div>
 
-    <button class="refresh-btn" onclick="loadBookings()">Refresh Bookings</button>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:24px;">
+      <button class="refresh-btn" style="margin:0;" onclick="loadBookings()">Refresh</button>
+      <button class="refresh-btn" style="margin:0;background:#e67e22;" onclick="goToday()">Today</button>
+    </div>
   </div>
 
   <script>
