@@ -27,6 +27,7 @@
       max-width: 900px;
       margin: 24px auto;
       padding: 0 16px;
+      overflow-x: hidden;
     }
 
     /* Property Info */
@@ -175,6 +176,13 @@
       border-radius: 3px;
       color: white;
       display: inline-block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .day {
+      overflow: hidden;
     }
 
     .tag.airbnb { background: #e53935; }
