@@ -260,8 +260,8 @@
     var currentTab = "sauna";
 
     var MONTH_NAMES = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "1月", "2月", "3月", "4月", "5月", "6月",
+      "7月", "8月", "9月", "10月", "11月", "12月"
     ];
 
     var TABS = {
@@ -355,7 +355,7 @@
 
     function renderCalendar() {
       document.getElementById("monthTitle").textContent =
-        MONTH_NAMES[currentMonth] + " " + currentYear;
+        currentYear + "年 " + MONTH_NAMES[currentMonth];
 
       var body = document.getElementById("calendarBody");
       body.innerHTML = "";
