@@ -132,31 +132,32 @@ module.exports = async function handler(req, res) {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
 
+    // Fetch from current month through November 2026
     const months = [];
-    for (let i = 0; i < 6; i++) {
-      let m = currentMonth + i;
-      let y = currentYear;
-      if (m > 12) {
-        m -= 12;
-        y++;
-      }
+    let y = currentYear;
+    let m = currentMonth;
+    while (y < 2026 || (y === 2026 && m <= 11)) {
       months.push({ year: y, month: m });
+      m++;
+      if (m > 12) { m = 1; y++; }
     }
 
-    const allBookings = [];
-    const errors = [];
-    for (const { year, month } of months) {
-      try {
-        const sheetName = year + "." + String(month).padStart(2, "0");
-        const text = await fetchSheetCSV(sheetName);
-        const rows = parseCSV(text);
-        const bookings = extractAvailability(rows, year);
-        allBookings.push(...bookings);
-      } catch (e) {
-        errors.push(year + "." + month + ": " + e.message);
-      }
-    }
+    const results = await Promise.all(
+      months.map(async function ({ year, month }) {
+        try {
+          const sheetName = year + "." + String(month).padStart(2, "0");
+          const text = await fetchSheetCSV(sheetName);
+          const rows = parseCSV(text);
+          return extractAvailability(rows, year);
+        } catch (e) {
+          return [];
+        }
+      })
+    );
 
+    const allBookings = results.flat();
+
+    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=60");
     res.status(200).json(allBookings);
   } catch (err) {
     res.status(500).json({ error: err.message });
