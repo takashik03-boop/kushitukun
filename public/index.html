@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>サウナ倶楽部&TAPKOP空室状況</title>
-  <meta property="og:title" content="サウナ倶楽部&TAPKOP空室状況">
-  <meta property="og:description" content="屈斜路湖サウナ倶楽部とTAPKOPの空室カレンダー">
+  <title>空室状況</title>
+  <meta property="og:title" content="空室状況">
+  <meta property="og:description" content="空室カレンダー">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://kushitukun.com">
   <style>
@@ -227,8 +227,8 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('sauna')">屈斜路湖サウナ倶楽部</button>
-    <button class="tab-btn" onclick="switchTab('tapkop')">TAPKOP</button>
+    <button class="tab-btn active" onclick="switchTab('sauna')">サ</button>
+    <button class="tab-btn" onclick="switchTab('tapkop')">T</button>
   </div>
 
   <div class="container">
@@ -266,8 +266,8 @@
 
     var TABS = {
       sauna: {
-        title: "屈斜路湖サウナ倶楽部",
-        subtitle: "Near Lake Kussharo, Hokkaido - Availability Calendar",
+        title: "サ",
+        subtitle: "Availability Calendar",
         api: "/api/bookings",
         legend: [
           { cls: "available", label: "Available" },
@@ -279,7 +279,7 @@
         ]
       },
       tapkop: {
-        title: "TAPKOP",
+        title: "T",
         subtitle: "Availability Calendar",
         api: "/api/tapkop",
         legend: [
