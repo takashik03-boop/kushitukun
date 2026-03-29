@@ -326,18 +326,33 @@
 
     function loadBookings() {
       var config = TABS[currentTab];
-      document.getElementById("calendarBody").innerHTML =
-        '<div class="loading">Loading...</div>';
+      var cacheKey = "cache_" + currentTab;
 
+      // Show cached data instantly if available
+      var cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          bookings = JSON.parse(cached);
+          renderCalendar();
+        } catch (e) {}
+      } else {
+        document.getElementById("calendarBody").innerHTML =
+          '<div class="loading">Loading...</div>';
+      }
+
+      // Fetch fresh data in background
       fetch(config.api)
         .then(function (res) { return res.json(); })
         .then(function (data) {
           bookings = data;
+          localStorage.setItem(cacheKey, JSON.stringify(data));
           renderCalendar();
         })
         .catch(function (err) {
-          document.getElementById("calendarBody").innerHTML =
-            '<div class="loading">Error loading bookings. Please try again.</div>';
+          if (!cached) {
+            document.getElementById("calendarBody").innerHTML =
+              '<div class="loading">Error loading bookings. Please try again.</div>';
+          }
           console.error(err);
         });
     }
